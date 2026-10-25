@@ -1,0 +1,118 @@
+@layer components {
+  .billing-input {
+    width: 7rem;
+    min-height: 44px;
+    padding: 0 10px;
+    border: 1px solid var(--color-charcoal);
+    border-radius: var(--radius-input);
+    background: var(--color-canvas-white);
+    color: var(--color-charcoal);
+    font: inherit;
+    font-size: 1rem;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+
+  .billing-input::placeholder {
+    color: var(--color-steel);
+    font-size: 0.8125rem;
+  }
+
+  .billing-input:focus {
+    border-color: var(--color-charcoal);
+    outline: 2px solid var(--color-electric-blue);
+    outline-offset: 1px;
+  }
+
+  .billing-input[aria-invalid="true"] {
+    border-color: var(--color-danger);
+    background: var(--color-danger-soft);
+  }
+
+  .billing-meter {
+    display: grid;
+    justify-items: end;
+    gap: 4px;
+  }
+
+  .billing-calculated {
+    display: grid;
+    gap: 2px;
+    font-size: 0.8125rem;
+    color: var(--color-steel);
+  }
+
+  .billing-calculated small {
+    font-size: 0.75rem;
+    color: var(--color-fog);
+  }
+
+  /* ตาราง 11 คอลัมน์: 1 เลือก · 2 ห้อง · 3 ผู้เช่า · 4 ค่าเช่า · 5 มิเตอร์น้ำ · 6 ค่าน้ำ · 7 มิเตอร์ไฟ
+     · 8 ค่าไฟ · 9 ค่าใช้จ่าย · 10 ยอดรวม · 11 สถานะ
+     ไม่ระบายสีพื้นคอลัมน์ — ช่องกรอกมีขอบดำชัดอยู่แล้ว การไฮไลต์ซ้ำทำให้ตารางหนักเกินจำเป็น */
+  .billing-meter-table .table td:nth-child(5),
+  .billing-meter-table .table td:nth-child(7) {
+    vertical-align: top;
+  }
+
+  /* กรอบมน หัวเทา แถวสลับสี — ใช้ .table-wrap ซ้ำเพื่อชนะ `.table-wrap-scroll .table th` ที่ทำหัวโปร่งใส */
+  .billing-meter-table.table-wrap {
+    border: 1px solid var(--color-ash);
+    border-radius: var(--radius-card);
+  }
+
+  .billing-meter-table.table-wrap .table th {
+    padding: 14px 12px;
+    background-color: var(--color-paper-mist);
+    color: var(--color-steel);
+    font-size: 0.8125rem;
+    font-weight: 600;
+  }
+
+  .billing-meter-table .table tbody tr:nth-child(even) td {
+    background-color: color-mix(in srgb, var(--color-paper-mist) 55%, var(--color-canvas-white));
+  }
+
+  .billing-meter-table .table tbody tr:hover td {
+    background-color: var(--color-paper-mist);
+  }
+
+  .billing-meter-table .table th:first-child,
+  .billing-meter-table .table td:first-child {
+    width: 44px;
+  }
+
+  /* ผู้เช่าเป็นข้อความอิสระ — ให้กว้างพอไม่ตัดคำเป็นสามบรรทัด */
+  .billing-meter-table .table td:nth-child(3) {
+    min-width: 120px;
+  }
+
+  .billing-meter-table .table td:nth-child(9) {
+    max-width: 240px;
+  }
+
+  .billing-selection > summary {
+    min-height: 44px;
+    padding: 10px 0;
+    cursor: pointer;
+    color: var(--color-steel);
+    font-size: 0.8125rem;
+  }
+
+  .billing-room-card .billing-meter,
+  .billing-room-card .billing-input {
+    width: 100%;
+    justify-items: stretch;
+  }
+
+  /* ในตาราง 11 คอลัมน์ ช่องกรอกแคบลงได้ — การ์ดยังใช้ความกว้างเต็ม */
+  .billing-meter-table .billing-input {
+    width: 5.5rem;
+  }
+
+  /* กล่องจัดการค่าไฟกว้างกว่ากล่องมาตรฐาน (560px) เพราะมีรายการห้องกับตารางเทียบก่อน/หลัง
+     — ui.tsx ไม่มีตัวเลือกขนาด จึงเลือกแผงจากเนื้อหาที่อยู่ข้างใน */
+  .dialog-panel:has(.electric-modal) {
+    width: min(640px, calc(100vw - 32px));
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "wangchan-demo",
+  "main": "src/worker/index.ts",
+  "compatibility_date": "2026-09-12",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "SEAM_PROBE": "0",
+
+    // repo นี้เป็นเดโมอย่างเดียว: เปิดเสมอ เส้นทาง /api/demo/enter พาเข้าแอปโดยไม่ต้องล็อกอิน
+    // และการส่ง LINE / ตรวจสลิปจริงทุกจุดถูกปิดโดยประตูเดียวกันนี้
+    "DEMO_MODE": "1",
+    "LIFF_ID": "",
+    "OWNER_EMAIL": "demo-owner@example.invalid"
+  },
+  // ไม่ใส่ database_id: wrangler dev ใช้ D1/R2 ในเครื่องได้เลย ส่วน `npm run deploy`
+  // ให้ wrangler สร้างทรัพยากรบนบัญชี Cloudflare ของคุณให้เอง
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "wangchan-demo",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "SLIPS",
+      "bucket_name": "wangchan-demo-slips"
+    }
+  ],
+  // หนึ่ง instance ต่อครอบครัว — fan-out ความเปลี่ยนแปลงของบิลไปทุกแท็บที่เปิดค้าง
+  "durable_objects": {
+    "bindings": [{ "name": "REALTIME", "class_name": "FamilyRealtime" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["FamilyRealtime"] }],
+  "rules": [
+    {
+      "type": "Data",
+      "globs": ["**/*.ttf"],
+      "fallthrough": true
+    }
+  ],
+  "assets": {
+    "directory": "./dist/client",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*", "/health", "/webhook/*", "/qr/*", "/slips/*", "/invoices/*", "/register", "/welcome"]
+  }
+}

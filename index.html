@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <!--
+      ธีมต้องถูกตัดสินก่อน CSS โหลดและก่อน first paint ไม่งั้นคนที่ใช้ธีมมืดจะเห็นจอวาบสว่าง
+      ทุกครั้งที่เปิดแอป — สคริปต์ด้านล่างอ่านค่าที่บันทึกไว้ (light/dark/system) ถ้าไม่มี
+      ใช้สว่างเป็นค่าเริ่มต้น แล้วติด data-theme ให้ CSS ใช้ ส่วน <style> เป็นพื้นสำรองก่อนสไตล์หลักมาถึง
+      ค่า hex ต้องตรงกับ token --color-canvas-white ใน src/client/styles.css (แก้คู่กัน)
+    -->
+    <style>
+      html {
+        color-scheme: light;
+        background-color: #ffffff;
+      }
+      html[data-theme="dark"] {
+        color-scheme: dark;
+        background-color: #0e0e10;
+      }
+    </style>
+    <meta name="theme-color" content="#ffffff" />
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem("wangchan-theme");
+          // ต้องตรงกับ readThemePreference/resolveTheme ใน src/client/theme.ts
+          var dark =
+            stored === "dark" ||
+            (stored === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+          document.documentElement.dataset.theme = dark ? "dark" : "light";
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) {
+            meta.setAttribute("content", dark ? "#0e0e10" : "#ffffff");
+          }
+        } catch (error) {
+          // localStorage ใช้ไม่ได้ (โหมดส่วนตัวบางเบราว์เซอร์) — ปล่อยธีมสว่างเป็นค่าเริ่มต้น
+        }
+      })();
+    </script>
+    <title>หอพักวังจันทร์ — ระบบจัดการหอพัก</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
+    <!--
+      ไอคอนที่ใช้จริงในแอปมีแค่ ~60 ชื่อ แต่ถ้าโหลดฟอนต์ Material Symbols
+      แบบเต็ม (ไม่ระบุ icon_names) จะได้ไฟล์ ~1.4MB เพราะมีทุกไอคอนของ Google
+      รวมอยู่ในไฟล์เดียว ระบุ icon_names ให้ Google ตัดเหลือเฉพาะที่ใช้ ทำให้
+      เหลือ ~23KB (เล็กลง 60 เท่า) — ถ้าเพิ่มไอคอนใหม่ในโค้ด (className="ms"
+      หรือ prop icon) ต้องเติมชื่อไอคอนนั้นในลิสต์นี้ด้วย ไม่งั้นไอคอนใหม่จะ
+      ไม่แสดง (fallback เป็นช่องว่าง)
+    -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL@20..48,400,0..1&icon_names=account_circle,add,arrow_back,arrow_forward,block,bolt,cancel,chat_bubble,check,check_circle,close,cloud_off,content_copy,delete,done_all,door_front,download,edit,error,expand_less,expand_more,fact_check,filter_alt_off,grid_view,group,groups,history,home,info,key,link,link_off,login,logout,more_horiz,more_vert,notifications,notifications_active,pending_actions,person,person_add,person_remove,qr_code_2,receipt_long,refresh,save,schedule,search,search_off,send,settings,shield_person,space_dashboard,table_rows,task_alt,verified,visibility,visibility_off,warning,water_drop,webhook&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/client/main.tsx"></script>
+  </body>
+</html>

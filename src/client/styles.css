@@ -1,0 +1,935 @@
+@import "tailwindcss";
+
+@theme {
+  --color-canvas-white: #ffffff;
+  --color-paper-mist: #f5f5f5;
+  --color-ash: #e5e5e5;
+  --color-smoke: #d4d4d4;
+  --color-pebble: #c8c8c8;
+  --color-midnight-ink: #0a0a0a;
+  --color-charcoal: #171717;
+  --color-graphite: #262626;
+  --color-slate: #404040;
+  --color-steel: #525252;
+  --color-fog: #6b6b6b;
+  --color-silver: #a3a3a3;
+  --color-electric-blue: #2563eb;
+  --color-deep-sapphire: #1e40af;
+  --color-soft-mint: #dcfce7;
+  --color-vivid-green: #16a34a;
+  --color-tangerine: #ea580c;
+  --color-lavender: #7c3aed;
+  --color-primary-action-fill: #0a0a0a;
+  --color-line-green: #06c755;
+  --color-danger: #dc2626;
+  --color-danger-soft: #fef2f2;
+  /* เส้นขอบ/ตัวอักษรแดงเข้มที่เดิมฝังเป็นค่าคงที่ในกฎ CSS — แยกเป็น token เพื่อให้ธีมมืดสลับได้ */
+  --color-danger-line: #fecaca;
+  --color-danger-ink: #b91c1c;
+  --color-status-paid-bg: #dcfce7;
+  --color-status-paid-fg: #15803d;
+  --color-status-unpaid-bg: #dbeaff;
+  --color-status-unpaid-fg: #1e40af;
+  --color-status-vacant-bg: #f5f5f5;
+  --color-status-vacant-fg: #525252;
+  --color-status-review-bg: #fff7e6;
+  --color-status-review-fg: #b45309;
+  --color-status-unbilled-bg: #ede9fe;
+  --color-status-unbilled-fg: #6d28d9;
+  --color-status-occupied-bg: #dbeaff;
+  --color-status-occupied-fg: #1e40af;
+
+  --gradient-conic-spectrum: conic-gradient(
+    from -81deg,
+    #ff0000,
+    #eab308 99deg,
+    #5cff80 162deg,
+    #00fff9 216deg,
+    #3a8bfd 288deg,
+    #855afc
+  );
+
+  --radius-input: 6px;
+  --radius-btn: 8px;
+  --radius-card: 12px;
+  --radius-panel: 16px;
+  --radius-pill: 9999px;
+
+  --shadow-subtle: rgba(0, 0, 0, 0.05) 0 1px 2px;
+  --shadow-sm: rgba(0, 0, 0, 0.1) 0 4px 6px -1px, rgba(0, 0, 0, 0.1) 0 2px 4px -2px;
+
+  --text-display: 2.5rem;
+
+  --font-sans: Inter, "Noto Sans Thai", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    /* พื้นเอกสารใช้ token เดียวกับ body — ช่วง overscroll และจังหวะก่อน CSS โหลดจะได้ไม่วาบขาวในธีมมืด */
+    background-color: var(--color-canvas-white);
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-canvas-white);
+    color: var(--color-charcoal);
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
+  /*
+   * ไม่บีบระยะตัวอักษรของหัวเรื่อง: -0.02em ออกแบบมาให้ตัวละติน (Inter) ดูแน่นขึ้นที่ขนาดใหญ่
+   * แต่ทั้งแอปเป็นภาษาไทย ฟอนต์ไทยวางสระบน/วรรณยุกต์เทียบกับพยัญชนะด้วยระยะคงที่ การหดช่องไฟ
+   * ทำให้เครื่องหมายเหล่านั้นชิดตัวถัดไป (วัดได้ −0.4px ที่ h1 ขนาด 20px)
+   */
+  h1,
+  h2,
+  h3 {
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+
+  /* token ยาวอย่าง LINE_CHANNEL_ACCESS_TOKEN ไม่มีจุดตัดตามธรรมชาติ — ปล่อยไว้จะดัน
+     ความกว้างการ์ดจนล้นจอบนมือถือ (วัดจริง: การ์ด 453px บนจอ 390px) */
+  code {
+    overflow-wrap: break-word;
+  }
+
+  /* ไฮไลต์การเลือกข้อความใช้ token เดียวกับพื้นป้าย "ยังไม่จ่าย" — ธีมมืดได้เฉดเข้มที่อ่านออกเอง */
+  ::selection {
+    background-color: var(--color-status-unpaid-bg);
+    color: var(--color-charcoal);
+  }
+
+  body,
+  input,
+  textarea,
+  select {
+    /* เคอร์เซอร์ใช้สีเน้นกลาง — ธีมมืดได้ฟ้าอ่อนที่มองเห็นบนพื้นเข้ม */
+    caret-color: var(--color-electric-blue);
+  }
+
+  a {
+    color: var(--color-electric-blue);
+    text-underline-offset: 3px;
+  }
+
+  :focus-visible {
+    /* วงโฟกัสใช้สีเน้นกลาง — ธีมมืดได้ฟ้าอ่อนที่เห็นชัดบนพื้นเข้ม */
+    outline: 2px solid var(--color-electric-blue);
+    outline-offset: 2px;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-smoke) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: var(--color-smoke);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-silver);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  .card {
+    background-color: var(--color-canvas-white);
+    border: 1px solid var(--color-ash);
+    border-radius: var(--radius-card);
+    padding: 16px;
+    box-shadow: none;
+  }
+
+  .panel-muted {
+    background-color: var(--color-paper-mist);
+    border: 0;
+    border-radius: var(--radius-panel);
+    padding: 16px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 44px;
+    padding: 0 16px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-btn);
+    background-color: transparent;
+    color: var(--color-charcoal);
+    font-family: inherit;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      background-color 150ms,
+      border-color 150ms,
+      color 150ms,
+      box-shadow 150ms;
+  }
+
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-primary {
+    background-color: var(--color-primary-action-fill);
+    color: var(--color-canvas-white);
+    box-shadow: var(--shadow-subtle);
+  }
+
+  .btn-primary:hover {
+    background-color: var(--color-graphite);
+  }
+
+  .btn-secondary {
+    background-color: var(--color-canvas-white);
+    border-color: var(--color-ash);
+  }
+
+  .btn-secondary:hover {
+    background-color: var(--color-paper-mist);
+  }
+
+  .btn-ghost {
+    background-color: transparent;
+  }
+
+  .btn-ghost:hover {
+    background-color: var(--color-paper-mist);
+  }
+
+  .btn-danger-soft {
+    background-color: var(--color-canvas-white);
+    border-color: var(--color-danger-line);
+    color: var(--color-danger-ink);
+  }
+
+  .btn-danger-soft:hover {
+    background-color: var(--color-danger-soft);
+  }
+
+  .btn-sm {
+    min-height: 32px;
+    padding: 4px 12px;
+    font-size: 0.8125rem;
+  }
+
+  .field-label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--color-steel);
+    font-size: 0.8125rem;
+    font-weight: 500;
+  }
+
+  .input {
+    width: 100%;
+    min-height: 44px;
+    padding: 0 12px;
+    border: 1px solid var(--color-midnight-ink);
+    border-radius: var(--radius-input);
+    background-color: var(--color-canvas-white);
+    color: var(--color-charcoal);
+    font-family: inherit;
+    font-size: 0.875rem;
+    transition: border-color 150ms;
+  }
+
+  .input::placeholder {
+    color: var(--color-fog);
+  }
+
+  .input:focus {
+    border-color: var(--color-electric-blue);
+  }
+
+  .input:disabled {
+    background-color: var(--color-paper-mist);
+    border-color: var(--color-ash);
+    color: var(--color-fog);
+  }
+
+  .input-inline {
+    width: 88px;
+    height: 32px;
+    min-height: 32px;
+    padding: 0 8px;
+    border: 1px solid var(--color-ash);
+    border-radius: var(--radius-input);
+    background-color: var(--color-canvas-white);
+    color: var(--color-charcoal);
+    font-family: inherit;
+    font-size: 0.875rem;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    transition: border-color 150ms;
+  }
+
+  .input-inline:focus {
+    border-color: var(--color-electric-blue);
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 10px;
+    border-radius: var(--radius-pill);
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .badge-dot {
+    width: 6px;
+    height: 6px;
+    flex-shrink: 0;
+    border-radius: var(--radius-pill);
+    background-color: currentColor;
+  }
+
+  .badge-paid {
+    background-color: var(--color-status-paid-bg);
+    color: var(--color-status-paid-fg);
+  }
+
+  .badge-unpaid {
+    background-color: var(--color-status-unpaid-bg);
+    color: var(--color-status-unpaid-fg);
+  }
+
+  .badge-vacant {
+    background-color: var(--color-status-vacant-bg);
+    color: var(--color-status-vacant-fg);
+  }
+
+  .badge-review {
+    background-color: var(--color-status-review-bg);
+    color: var(--color-status-review-fg);
+  }
+
+  .badge-unbilled {
+    background-color: var(--color-status-unbilled-bg);
+    color: var(--color-status-unbilled-fg);
+  }
+
+  .badge-occupied {
+    background-color: var(--color-status-occupied-bg);
+    color: var(--color-status-occupied-fg);
+  }
+
+  .badge-danger {
+    background-color: var(--color-danger-soft);
+    color: var(--color-danger-ink);
+  }
+
+  .badge-neutral {
+    background-color: var(--color-paper-mist);
+    color: var(--color-steel);
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-paper-mist);
+    color: var(--color-slate);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    line-height: 1.5;
+    white-space: nowrap;
+  }
+
+  /*
+   * chip บนแถวที่ถูกเลือก — พื้นของแถวนั้นเป็น paper-mist เท่ากับพื้น chip
+   * ปกติ สลับเป็นพื้นขาว+เส้นขอบเพื่อให้ยังอ่านผู้รับออกในแถวที่สำคัญที่สุด
+   */
+  .chip-on-selected {
+    background-color: var(--color-canvas-white);
+    border: 1px solid var(--color-ash);
+  }
+
+  .icon-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border: 1px solid var(--color-ash);
+    border-radius: var(--radius-btn);
+    background-color: var(--color-canvas-white);
+    color: var(--color-slate);
+    cursor: pointer;
+    transition:
+      background-color 150ms,
+      border-color 150ms;
+  }
+
+  .icon-btn:hover {
+    background-color: var(--color-paper-mist);
+  }
+
+  .row-menu {
+    position: fixed;
+    z-index: 70;
+    display: grid;
+    gap: 2px;
+    min-width: 184px;
+    padding: 4px;
+    border: 1px solid var(--color-ash);
+    border-radius: var(--radius-card);
+    background-color: var(--color-canvas-white);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .row-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 44px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: var(--radius-btn);
+    background-color: transparent;
+    color: var(--color-charcoal);
+    font-family: inherit;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .row-menu-item:hover {
+    background-color: var(--color-paper-mist);
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  @media (max-width: 767px) {
+    .btn-sm {
+      min-height: 44px;
+    }
+
+    .icon-btn {
+      width: 44px;
+      height: 44px;
+    }
+
+    .input-inline {
+      height: 44px;
+      min-height: 44px;
+    }
+
+    /*
+     * iOS Safari ซูมทั้งหน้าเมื่อโฟกัสช่องที่ตัวอักษรเล็กกว่า 16px — ช่องกรอกทุกตัว
+     * จึงต้อง 16px บนจอเล็ก (CredentialField ทำแบบนี้อยู่แล้ว) แล้วกลับเป็น 14px บนจอใหญ่
+     * ที่การซูมไม่เกิด และความหนาแน่นของตารางสำคัญกว่า
+     */
+    .input,
+    .input-inline {
+      font-size: 1rem;
+    }
+  }
+
+  .kbd {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 6px;
+    border: 1px solid var(--color-ash);
+    border-radius: var(--radius-input);
+    background-color: var(--color-paper-mist);
+    color: var(--color-fog);
+    font-size: 0.6875rem;
+    line-height: 1.5;
+  }
+
+  .table-wrap {
+    position: relative;
+    overflow-x: auto;
+  }
+
+  /* Scroll affordance: an edge shadow that only appears while there is more table
+     off-screen, and fades out once that edge is reached. Apply next to `.table-wrap`
+     (DataTable does this itself and also accepts `wrapClassName`). */
+  .table-wrap-scroll {
+    background-image:
+      linear-gradient(to right, var(--color-canvas-white) 30%, rgba(255, 255, 255, 0)),
+      linear-gradient(to left, var(--color-canvas-white) 30%, rgba(255, 255, 255, 0)),
+      radial-gradient(farthest-side at 0 50%, rgba(10, 10, 10, 0.14), rgba(10, 10, 10, 0)),
+      radial-gradient(farthest-side at 100% 50%, rgba(10, 10, 10, 0.14), rgba(10, 10, 10, 0));
+    background-position: 0 0, 100% 0, 0 0, 100% 0;
+    background-repeat: no-repeat;
+    background-size: 32px 100%, 32px 100%, 12px 100%, 12px 100%;
+    background-attachment: local, local, scroll, scroll;
+  }
+
+  /*
+   * The header row is opaque white by default, which would cut the shadow off
+   * above the first body row.
+   */
+  .table-wrap-scroll .table th {
+    background-color: transparent;
+  }
+
+  /*
+   * ตารางที่ให้หัวค้างบนจอ
+   *
+   * `position: sticky` ยึดกับ scrollport ที่ใกล้ที่สุด ถ้า wrapper เป็น scroll
+   * container (มี overflow: auto) หัวจะค้างกับ "กรอบตาราง" ไม่ใช่หน้าเว็บ
+   * แต่ถ้าปลด overflow ทิ้ง ตารางที่กว้างเกินจอ (คอลัมน์รวม 1120px) จะถูกตัด
+   * จนคอลัมน์ "จัดการ" หายไป กดปุ่มไม่ได้ — แย่กว่าไม่มี sticky
+   *
+   * จึงใช้คนละโหมดตามพื้นที่จริง:
+   *   - กรอบแคบกว่าตาราง → ให้ตารางเลื่อนในกรอบตัวเอง (overflow: auto) และ
+   *     จำกัดความสูงไว้เท่าจอ (ลบที่ให้แถบหัวหน้าแอป + หัวการ์ด) หัวค้างบนสุด
+   *     ของกรอบตลอด — เลื่อนดูข้อมูลได้โดยไม่ต้องละสายตาจากหัวคอลัมน์
+   *   - กรอบกว้างพอ (≥1500px) → ใช้ overflow-x: clip ซึ่งไม่สร้าง scroll
+   *     container หัวจึงค้างกับหน้าเว็บจริง เลื่อนครั้งเดียว ไม่มี scrollbar ซ้อน
+   */
+  .table-wrap-sticky {
+    max-height: calc(100dvh - 13rem);
+    overflow: auto;
+  }
+
+  .table-wrap-scroll .table-sticky-head th {
+    background-color: var(--color-canvas-white);
+  }
+
+  .table-sticky-head th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+
+  /*
+   * 1500px = คอลัมน์รวม 1120 + sidebar 232 + padding — จุดที่ตารางพอดีกรอบ
+   * `clip` ใช้คู่กับ `visible` ได้ (ต่างจาก auto ที่บังคับให้อีกแกนเป็น auto)
+   */
+  @media (min-width: 1500px) {
+    .table-wrap-sticky {
+      max-height: none;
+      overflow: visible;
+      overflow-x: clip;
+    }
+
+    /*
+     * ต้องค้างที่ 4rem (64px) ให้ตรงกับความสูงแถบหัวหน้าแอป (h-16) พอดี
+     *
+     * ถ้าเผื่อมากกว่านั้น (เช่น 5rem) จะเกิดช่อง 64–80px ที่แถวข้อมูลทะลุขึ้นมา
+     * ให้เห็นเหนือหัวตาราง เพราะแถบหัวแอปทึบคลุมแค่ 0–64px เท่านั้น
+     */
+    .table-sticky-head th {
+      top: 4rem;
+    }
+  }
+
+  .table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  .table th {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--color-ash);
+    background-color: var(--color-canvas-white);
+    color: var(--color-fog);
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  .table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--color-ash);
+    color: var(--color-charcoal);
+    font-size: 0.875rem;
+    vertical-align: middle;
+  }
+
+  .table tbody tr:hover {
+    background-color: var(--color-paper-mist);
+  }
+
+  .table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .table th.num,
+  .table td.num {
+    text-align: right;
+  }
+
+  .skeleton {
+    border-radius: var(--radius-btn);
+    background-color: var(--color-paper-mist);
+    animation: skeleton-pulse 1.4s ease-in-out infinite;
+  }
+
+  @keyframes skeleton-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.55;
+    }
+  }
+
+  .toast {
+    position: fixed;
+    bottom: calc(88px + env(safe-area-inset-bottom));
+    left: 50%;
+    z-index: 60;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    border-radius: var(--radius-card);
+    background-color: var(--color-charcoal);
+    color: var(--color-canvas-white);
+    font-size: 0.875rem;
+    box-shadow: var(--shadow-sm);
+    transform: translateX(-50%);
+  }
+
+  /* Keeps the `role="status"` region mounted and out of the layout while closed,
+     so the live region exists before its contents change. */
+  .toast-off {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  @media (min-width: 768px) {
+    .toast {
+      bottom: 24px;
+    }
+  }
+
+  /* Tailwind's Preflight zeroes `margin` on every element, which un-centres modal
+     dialogs: the UA stylesheet relies on `margin: auto` next to `position: fixed;
+     inset: 0` to centre them. `.drawer` and `.sheet` set their own inset/margin. */
+  dialog {
+    position: fixed;
+    inset: 0;
+    width: fit-content;
+    height: fit-content;
+    margin: auto;
+    border: 0;
+    padding: 0;
+    background-color: transparent;
+    color: var(--color-charcoal);
+  }
+
+  dialog::backdrop {
+    background-color: rgba(10, 10, 10, 0.45);
+  }
+
+  .dialog-panel {
+    width: min(560px, calc(100vw - 32px));
+    /* dvh ไม่ใช่ vh: บนมือถือแถบเครื่องมือเบราว์เซอร์หด/ขยาย 100vh จึงสูงเกินจอจริง */
+    max-height: calc(100dvh - 64px);
+    overflow-y: auto;
+    border-radius: var(--radius-panel);
+    background-color: var(--color-canvas-white);
+    box-shadow: var(--shadow-sm);
+  }
+
+  dialog.drawer {
+    position: fixed;
+    inset: 0 0 0 auto;
+    margin: 0;
+    width: min(460px, 100vw);
+    max-width: 100vw;
+    height: 100%;
+    max-height: none;
+    border-radius: var(--radius-panel) 0 0 var(--radius-panel);
+    background-color: var(--color-canvas-white);
+    box-shadow: var(--shadow-sm);
+    overflow-y: auto;
+  }
+
+  dialog.drawer[open] {
+    animation: drawer-in 220ms ease-out;
+  }
+
+  @keyframes drawer-in {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  dialog.sheet {
+    position: fixed;
+    inset: auto 0 0 0;
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+    border-radius: var(--radius-panel) var(--radius-panel) 0 0;
+    background-color: var(--color-canvas-white);
+    box-shadow: var(--shadow-sm);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  @keyframes sheet-up {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+}
+
+dialog.sheet[open] {
+  animation: sheet-up 200ms ease-out;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Keep inside @layer components: unlayered rules outrank @layer utilities, so a bare
+   `.ms { display: inline-block }` would beat Tailwind's `grid` and silently kill
+   `place-items-center` on the icon spans that centre a glyph in a sized box. */
+@layer components {
+  .ms {
+    display: inline-block;
+    font-family: "Material Symbols Rounded";
+    font-variation-settings: "FILL" 0, "wght" 400;
+    font-weight: normal;
+    font-style: normal;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    white-space: nowrap;
+    word-wrap: normal;
+    user-select: none;
+  }
+
+  .ms.fill {
+    font-variation-settings: "FILL" 1, "wght" 400;
+  }
+}
+
+/*
+ * ── ธีมมืด ───────────────────────────────────────────────────────────────
+ *
+ * กลไก: ค่าจริงถูกตัดสินเป็น light/dark แล้วติดเป็น data-theme บน <html> (สคริปต์ใน
+ * index.html ก่อน first paint, จากนั้น src/client/theme.ts ตามให้ทัน) จึงไม่ใช้
+ * prefers-color-scheme ใน CSS ตรง ๆ — ผู้ใช้เลือกทับ OS ได้ และชุดสีมืดอยู่ที่เดียว
+ *
+ * กฎนี้อยู่นอก @layer โดยตั้งใจ: unlayered ชนะทุก layer (รวม utilities ของ Tailwind)
+ * จึงทับค่า token ที่ @theme ประกาศไว้ได้แน่นอน ไม่ต้องพึ่งลำดับความจำเพาะ
+ *
+ * ค่าทุกตัวจับคู่กับ @theme ด้านบนแบบ 1:1 — เพิ่ม/แก้ token ต้องแก้ทั้งสองที่
+ * หลักเลือกค่า: neutral ไล่ชั้นตามพื้น, ตัวอักษรสว่างพอผ่าน AA บนพื้นเข้ม, และสีเน้น
+ * (ฟ้า/แดง/สถานะ) ต้องสว่างขึ้นจากเดิมเพราะพื้นหลังมืด — ห้ามยกค่าเดิมของธีมสว่างมาใช้
+ */
+:root {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-canvas-white: #0e0e10;
+  --color-paper-mist: #19191d;
+  --color-ash: #2a2a30;
+  --color-smoke: #3a3a42;
+  --color-pebble: #4c4c55;
+  --color-midnight-ink: #b9b9c2;
+  --color-charcoal: #ededf0;
+  --color-graphite: #d6d6db;
+  --color-slate: #b2b2ba;
+  --color-steel: #a3a3ab;
+  --color-fog: #8f8f98;
+  --color-silver: #5c5c66;
+  --color-electric-blue: #7fa8ff;
+  --color-deep-sapphire: #bcd2ff;
+  --color-soft-mint: #1b3527;
+  --color-vivid-green: #4ade80;
+  --color-tangerine: #ff9d5c;
+  --color-lavender: #b79cff;
+  --color-primary-action-fill: #f4f4f6;
+  --color-danger: #f87171;
+  --color-danger-soft: #2b1516;
+  --color-danger-line: #5b2326;
+  --color-danger-ink: #fca5a5;
+  --color-status-paid-bg: #14301f;
+  --color-status-paid-fg: #66e0a0;
+  --color-status-unpaid-bg: #1a2743;
+  --color-status-unpaid-fg: #a8c4ff;
+  --color-status-vacant-bg: #1d1d22;
+  --color-status-vacant-fg: #a3a3ab;
+  --color-status-review-bg: #33260f;
+  --color-status-review-fg: #f0c070;
+  --color-status-unbilled-bg: #291f45;
+  --color-status-unbilled-fg: #c0a8ff;
+  --color-status-occupied-bg: #1a2743;
+  --color-status-occupied-fg: #a8c4ff;
+}
+
+/* เงามุมตาราง: เงาดำจางหายไปบนพื้นดำ จึงใช้ไฮไลต์สว่างบาง ๆ แทนการ์ดความลึกเดิม */
+:root[data-theme="dark"] .table-wrap-scroll {
+  background-image:
+    linear-gradient(to right, var(--color-canvas-white) 30%, rgba(255, 255, 255, 0)),
+    linear-gradient(to left, var(--color-canvas-white) 30%, rgba(255, 255, 255, 0)),
+    radial-gradient(farthest-side at 0 50%, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0)),
+    radial-gradient(farthest-side at 100% 50%, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0));
+}
+
+/* ฉากหลังโมดัล: พื้นจอมืดอยู่แล้ว จึงต้องหรี่ลึกกว่าเดิมให้แผงที่ลอยอยู่เด่น */
+:root[data-theme="dark"] dialog::backdrop {
+  background-color: rgba(0, 0, 0, 0.66);
+}
+
+/*
+ * พรีวิวการ์ดข้อความ LINE
+ *
+ * การ์ดนี้จำลอง "สิ่งที่ผู้เช่าเห็นในแชทจริง" สีบางส่วนมาจาก JSON ของข้อความที่ server ส่ง
+ * (หัวการ์ด ปุ่ม ตัวอักษร) จึงต้องคงชุดสีสว่างไว้ทุกธีม ไม่งั้นสีที่ส่งมาจริงจะกลืนพื้นมืด
+ * และค่าคงที่อย่าง #171717 จะอ่านไม่ออก
+ *
+ * วิธีคือตรึง token ทั้งชุดกลับเป็นค่าสว่างที่ซับทรีนี้ (custom property สืบทอดลงลูกทุกชั้น)
+ * แทนการแก้โค้ดทีละสี — สลับธีมทั้งแอปได้โดยไม่ต้องแตะ line.tsx อีก
+ */
+.line-preview {
+  color-scheme: light;
+  --color-canvas-white: #ffffff;
+  --color-paper-mist: #f5f5f5;
+  --color-ash: #e5e5e5;
+  --color-smoke: #d4d4d4;
+  --color-pebble: #c8c8c8;
+  --color-midnight-ink: #0a0a0a;
+  --color-charcoal: #171717;
+  --color-graphite: #262626;
+  --color-slate: #404040;
+  --color-steel: #525252;
+  --color-fog: #6b6b6b;
+  --color-silver: #a3a3a3;
+  --color-electric-blue: #2563eb;
+  --color-danger: #dc2626;
+  --color-danger-soft: #fef2f2;
+  --color-danger-line: #fecaca;
+  --color-danger-ink: #b91c1c;
+  --color-status-unpaid-bg: #dbeaff;
+  background-color: #ffffff;
+  color: #171717;
+}
+
+/* Dashboard: compact overview within the existing app shell. */
+.dashboard-page .dashboard-charts { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 20px; margin-bottom: 20px; }
+.dashboard-page .dashboard-charts > .card { min-width: 0; min-height: 330px; padding: 20px; }
+.dashboard-card-title { margin: 0; color: var(--color-charcoal); font-size: 1rem; font-weight: 600; line-height: 1.5; }
+.dashboard-card-description { margin: 2px 0 18px; color: var(--color-steel); font-size: .8125rem; }
+.dashboard-occupancy { display: flex; align-items: center; gap: 24px; }
+.dashboard-donut { width: 180px; height: 180px; flex: 0 0 180px; border-radius: 50%; display: grid; place-items: center; background: conic-gradient(var(--color-electric-blue) var(--occupied-percent), var(--color-smoke) 0); }
+.dashboard-donut-center { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 73%; height: 73%; border-radius: 50%; background: var(--color-canvas-white); color: var(--color-charcoal); }
+.dashboard-donut-center strong { font-size: 1.75rem; line-height: 1.15; }
+.dashboard-donut-center span { color: var(--color-steel); font-size: .75rem; }
+.dashboard-occupancy-legend { flex: 1; min-width: 0; font-size: .8125rem; }
+.dashboard-occupancy-legend > div { display: flex; justify-content: space-between; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--color-ash); }
+.dashboard-occupancy-legend > div:last-child { border: 0; }
+.dashboard-occupancy-legend span { display: inline-flex; align-items: center; gap: 7px; }
+.dashboard-occupancy-total { color: var(--color-charcoal); font-weight: 600; }
+.dashboard-key-dot { display: inline-block; width: 10px; height: 10px; flex: 0 0 10px; border-radius: 50%; background: var(--color-smoke); }
+.dashboard-key-collected { background: var(--color-electric-blue); }
+.dashboard-key-outstanding { background: #b45309; }
+.dashboard-key-vacant { background: var(--color-smoke); }
+.dashboard-revenue-bars { height: 208px; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+.dashboard-revenue-column { position: relative; display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; min-width: 0; padding-top: 28px; padding-bottom: 20px; text-align: center; }
+.dashboard-revenue-value { position: absolute; bottom: calc(20px + var(--bar-height, 0px)); width: 100%; font-size: .6875rem; line-height: 1.1; color: var(--color-charcoal); white-space: nowrap; }
+.dashboard-revenue-column:has(.dashboard-revenue-bar[style]) .dashboard-revenue-value { position: static; margin-bottom: 4px; }
+.dashboard-outstanding { display: block; color: var(--color-status-review-fg); }
+.dashboard-revenue-bar { display: flex; flex-direction: column; justify-content: flex-end; width: 100%; border-radius: 6px 6px 0 0; overflow: hidden; background: var(--color-status-unpaid-bg); }
+.dashboard-revenue-collected { width: 100%; background: var(--color-status-unpaid-bg); }
+.dashboard-revenue-bar.is-current .dashboard-revenue-collected { background: var(--color-electric-blue); }
+.dashboard-revenue-unpaid { width: 100%; background: #b45309; }
+.dashboard-revenue-label { position: absolute; bottom: 0; inset-inline: 0; color: var(--color-steel); font-size: .6875rem; }
+.dashboard-chart-key { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 18px; color: var(--color-steel); font-size: .75rem; }
+.dashboard-chart-key span { display: inline-flex; align-items: center; gap: 6px; }
+.dashboard-room-card { padding: 20px; }
+.dashboard-room-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 18px; }
+.dashboard-room-key { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 14px; color: var(--color-steel); font-size: .75rem; }
+.dashboard-room-key > span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.dashboard-room-key .ms { font-size: 16px; }
+.dashboard-key-square { width: 12px; height: 12px; flex: 0 0 12px; border: 1px solid var(--color-smoke); border-radius: 3px; }
+.dashboard-key-square.is-vacant { background: var(--color-canvas-white); }
+.dashboard-key-square.is-waiting { background: var(--color-paper-mist); }
+.dashboard-key-square.is-paid { background: var(--color-status-paid-fg); border-color: var(--color-status-paid-fg); }
+.dashboard-key-square.is-review { background: var(--color-status-review-fg); border-color: var(--color-status-review-fg); }
+.dashboard-key-square.is-arrears { background: var(--color-danger); border-color: var(--color-danger); }
+.dashboard-room-grid { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.dashboard-room-tile { position: relative; display: flex; min-width: 0; min-height: 58px; flex-direction: column; align-items: center; justify-content: center; padding: 4px 2px; border: 1px solid var(--color-ash); border-radius: 8px; background: var(--color-paper-mist); color: var(--color-charcoal); text-align: center; text-decoration: none; line-height: 1.2; }
+.dashboard-room-tile:hover { filter: brightness(.96); text-decoration: none; }
+.dashboard-room-number { max-width: 100%; font-size: .875rem; overflow-wrap: anywhere; }
+.dashboard-room-status { margin-top: 3px; font-size: .6875rem; }
+.dashboard-room-tile.is-vacant { border: 1px dashed var(--color-smoke); background: var(--color-canvas-white); }
+.dashboard-room-tile.is-paid { border-color: var(--color-status-paid-fg); background: var(--color-status-paid-bg); color: var(--color-status-paid-fg); }
+.dashboard-room-tile.is-review { border-color: var(--color-status-review-fg); background: var(--color-status-review-bg); color: var(--color-status-review-fg); }
+.dashboard-room-tile.is-arrears { border-color: var(--color-danger-line); background: var(--color-danger-soft); color: var(--color-danger-ink); }
+.dashboard-no-line { position: absolute; top: 4px; right: 4px; color: var(--color-steel); font-size: 13px; line-height: 1; }
+@media (max-width: 1279px) { .dashboard-room-grid { grid-template-columns: repeat(8, minmax(0, 1fr)); } }
+@media (max-width: 1050px) { .dashboard-charts { grid-template-columns: minmax(0, 1fr) !important; } .dashboard-room-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+@media (max-width: 640px) {
+  .dashboard-page .dashboard-charts { gap: 14px; margin-bottom: 14px; }
+  .dashboard-page .dashboard-charts > .card, .dashboard-room-card { min-height: 0; padding: 16px; }
+  .dashboard-occupancy { flex-direction: column; align-items: stretch; gap: 16px; }
+  .dashboard-donut { align-self: center; }
+  .dashboard-room-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .dashboard-room-tile:has(.dashboard-no-line) { min-height: 72px; padding-bottom: 16px; }
+  .dashboard-no-line { top: auto; bottom: 3px; right: 50%; transform: translateX(50%); }
+}
