@@ -169,7 +169,7 @@ const welcomeStyles = `
       .frame { overflow: hidden; border: 1px solid var(--ash); border-radius: var(--radius-card); background: var(--white); box-shadow: var(--shadow-sm); }
       .frame-bar { display: flex; gap: 6px; padding: 10px 12px; border-bottom: 1px solid var(--ash); background: var(--paper); }
       .frame-dot { width: 8px; height: 8px; border-radius: var(--radius-pill); background: var(--silver); }
-      .frame img { display: block; width: 100%; height: auto; }
+      .frame img, .frame video { display: block; width: 100%; height: auto; }
 
       /* .subhead ต้องต่างจาก .note (12px #6b6b6b) ให้อ่านออกว่าเป็นป้ายกำกับหัวข้อ
          ไม่ใช่คำอธิบาย และ .step h3 ต้องหนักกว่าเนื้อความ 15px/400 รอบตัว ไม่ใช่เท่ากัน */
@@ -354,9 +354,10 @@ function heroSection(demoMode: boolean): string {
         <div>
           <div class="frame">
             <div class="frame-bar" aria-hidden="true"><span class="frame-dot"></span><span class="frame-dot"></span><span class="frame-dot"></span></div>
-            <img src="/welcome-media/hero-bill-create.webp" width="804" height="798" fetchpriority="high" decoding="async" alt="การ์ดห้อง A101 ของสมชาย ใจดี กรอกเลขมิเตอร์น้ำและไฟแล้ว ระบบคำนวณค่าน้ำ ค่าไฟ และยอดรวม 3,999 บาท พร้อมสถานะพร้อมสร้าง" />
+            <video id="promo" src="/welcome-media/promo.mp4" poster="/welcome-media/hero-bill-create.webp" width="1920" height="1080" autoplay muted loop playsinline controls preload="metadata" aria-label="วิดีโอแนะนำระบบ ยาว 37 วินาที ตั้งแต่กรอกเลขมิเตอร์ ส่งบิลเข้า LINE ปิดบิลจากสลิป จนถึงแดชบอร์ดภาพรวมทั้งหอ"></video>
+            <script>(function(){var v=document.getElementById("promo");if(v&&window.matchMedia("(prefers-reduced-motion: reduce)").matches){v.removeAttribute("autoplay");v.pause();}})();</script>
           </div>
-          <p class="note">ภาพหน้าจอจากข้อมูลตัวอย่าง</p>
+          <p class="note">วิดีโอแนะนำ 37 วินาที จากข้อมูลตัวอย่าง · เปิดเสียงได้ที่แถบควบคุม</p>
         </div>
       </div>
     </section>`;
@@ -421,9 +422,9 @@ function demoSection(demoMode: boolean): string {
           <div class="demo-panel">
             <h3>สิ่งที่คุณจะเจอเมื่อเข้าไป</h3>
             <ul>
-              <li>แดชบอร์ดรายรับของเดือนก่อนหน้า พร้อมยอดค้างชำระและห้องว่าง</li>
+              <li>แดชบอร์ดเดือนปัจจุบัน พร้อมอัตราการเข้าพัก กราฟรายรับ 6 เดือน และผังสถานะทุกห้อง (เลือกเดือนก่อนหน้าเพื่อดูยอดที่เก็บแล้วและค้างชำระ)</li>
               <li>บิลสองเดือนย้อนหลัง ครอบคลุมทั้งจ่ายแล้ว ยังไม่จ่าย และสลิปรอตรวจ</li>
-              <li>เดือนปัจจุบันเว้นว่างไว้ ให้ได้ลองออกบิลทั้งหอด้วยมือตัวเอง</li>
+              <li>เดือนปัจจุบันเว้นว่างไว้ ให้ได้ลองกรอกมิเตอร์และออกบิลทั้งหอด้วยมือตัวเอง</li>
             </ul>
             ${primaryCta(demoMode)}
             <p class="note">เดโมใช้ฐานข้อมูลคนละก้อนกับหอจริง แก้หรือลบข้อมูลในนั้นได้ไม่มีผลกับข้อมูลจริง</p>
@@ -465,10 +466,10 @@ const screenshots: ReadonlyArray<readonly [string, string, string, number, numbe
   [
     "/welcome-media/bill-dashboard.webp",
     "แดชบอร์ดรายเดือน",
-    "ยอดที่ควรเก็บ เก็บแล้ว และค้างชำระของเดือนที่เลือก พร้อมจำนวนห้องว่างและอัตราการเช่า",
-    804,
-    372,
-    "การ์ดสรุปเดือนสิงหาคม 2569 ของหอ 18 ห้อง ยอดที่ควรเก็บ 63,324 บาท จาก 15 บิล เก็บแล้ว 47,140 บาท จาก 11 บิล ค้างชำระ 16,184 บาท จาก 4 ห้อง ห้องว่าง 3 จาก 18 ห้อง อัตราการเช่า 83 เปอร์เซ็นต์",
+    "อัตราการเข้าพัก กราฟรายรับ 6 เดือน และผังสถานะทุกห้องของเดือนที่เลือก เห็นทันทีว่าห้องไหนจ่ายแล้ว ห้องไหนรอชำระ",
+    1600,
+    711,
+    "แดชบอร์ดเดือนกันยายน 2569 ของหอ 18 ห้อง การ์ดการเข้าพักบอก 83 เปอร์เซ็นต์ มีผู้เช่า 15 ห้อง ว่าง 3 ห้อง กราฟรายรับ 6 เดือนแสดงเดือนกันยายนเก็บได้แล้ว 47,140 บาท และยังไม่ได้รับ 16,184 บาท ผังห้องแสดงชำระแล้ว 11 ห้อง รอตรวจยอด 1 ห้อง และรอชำระหรือยังไม่ออกบิล 3 ห้อง",
   ],
   [
     "/welcome-media/bill-line-qr.webp",
@@ -481,10 +482,10 @@ const screenshots: ReadonlyArray<readonly [string, string, string, number, numbe
   [
     "/welcome-media/payment-status.webp",
     "สถานะการชำระและคิวรอตรวจ",
-    "สลิปที่ยอดไม่ตรงหรือตรวจไม่ผ่านจะเข้าคิวนี้ เจ้าของหอเห็นยอดเทียบกับยอดบิลแล้วตัดสินปิดหรือปฏิเสธ",
-    736,
-    1974,
-    "คิวรอตรวจของห้อง A105 อรุณี แสงทอง สลิปยอด 4,046 บาท ตรงกับยอดบิล แต่ผลตรวจจาก SlipOK ขึ้นว่าตรวจไม่ผ่านเพราะไม่พบเลขอ้างอิงการโอน พร้อมปุ่มปฏิเสธสลิปและปิดบิลด้วยสลิปนี้",
+    "สลิปที่ยอดไม่ตรงหรือตรวจไม่ผ่านจะเข้าคิวนี้ เจ้าของหอเห็นผลตรวจกับยอดบิลแล้วตัดสินปิดหรือปฏิเสธ",
+    1400,
+    1103,
+    "คิวรอตรวจของห้อง A105 อรุณี แสงทอง สลิปโอนเงิน 4,046 บาท ผลตรวจจาก SlipOK ขึ้นว่าตรวจไม่ผ่านเพราะไม่พบเลขอ้างอิงการโอน ใต้ภาพมียอดบิล 4,046 บาท บิลที่นำมาเทียบเป็นรอบกันยายน 2569 พร้อมปุ่มปฏิเสธสลิปและปิดบิลด้วยสลิปนี้",
   ],
 ];
 
