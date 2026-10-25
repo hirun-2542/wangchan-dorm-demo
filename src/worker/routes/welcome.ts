@@ -170,6 +170,11 @@ const welcomeStyles = `
       .frame-bar { display: flex; gap: 6px; padding: 10px 12px; border-bottom: 1px solid var(--ash); background: var(--paper); }
       .frame-dot { width: 8px; height: 8px; border-radius: var(--radius-pill); background: var(--silver); }
       .frame img, .frame video { display: block; width: 100%; height: auto; }
+      .video-wrap { position: relative; }
+      /* เบราว์เซอร์บล็อกการเล่นอัตโนมัติที่มีเสียง จึงเล่นแบบปิดเสียงก่อนแล้วให้ผู้ชมกดเปิดเอง */
+      .sound-btn { position: absolute; top: 10px; right: 10px; display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px; border: 0; border-radius: var(--radius-btn); background: rgba(10, 10, 10, 0.86); color: var(--white); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+      .sound-btn:hover { background: var(--ink); }
+      .sound-btn:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 
       /* .subhead ต้องต่างจาก .note (12px #6b6b6b) ให้อ่านออกว่าเป็นป้ายกำกับหัวข้อ
          ไม่ใช่คำอธิบาย และ .step h3 ต้องหนักกว่าเนื้อความ 15px/400 รอบตัว ไม่ใช่เท่ากัน */
@@ -354,10 +359,13 @@ function heroSection(demoMode: boolean): string {
         <div>
           <div class="frame">
             <div class="frame-bar" aria-hidden="true"><span class="frame-dot"></span><span class="frame-dot"></span><span class="frame-dot"></span></div>
-            <video id="promo" src="/welcome-media/promo.mp4" poster="/welcome-media/hero-bill-create.webp" width="1920" height="1080" autoplay muted loop playsinline controls preload="metadata" aria-label="วิดีโอแนะนำระบบ ยาว 37 วินาที ตั้งแต่กรอกเลขมิเตอร์ ส่งบิลเข้า LINE ปิดบิลจากสลิป จนถึงแดชบอร์ดภาพรวมทั้งหอ"></video>
-            <script>(function(){var v=document.getElementById("promo");if(v&&window.matchMedia("(prefers-reduced-motion: reduce)").matches){v.removeAttribute("autoplay");v.pause();}})();</script>
+            <div class="video-wrap">
+              <video id="promo" src="/welcome-media/promo.mp4" poster="/welcome-media/hero-bill-create.webp" width="1920" height="1080" autoplay muted loop playsinline controls preload="metadata" aria-label="วิดีโอแนะนำระบบ ยาว 38 วินาที ตั้งแต่กรอกเลขมิเตอร์ ส่งบิลเข้า LINE ปิดบิลจากสลิป จนถึงแดชบอร์ดภาพรวมทั้งหอ มีดนตรีประกอบ"></video>
+              <button type="button" class="sound-btn" id="promo-sound" aria-pressed="false">เปิดเสียง</button>
+            </div>
+            <script>(function(){var v=document.getElementById("promo"),b=document.getElementById("promo-sound");if(!v||!b)return;if(window.matchMedia("(prefers-reduced-motion: reduce)").matches){v.removeAttribute("autoplay");v.pause();}b.addEventListener("click",function(){v.muted=!v.muted;b.textContent=v.muted?"เปิดเสียง":"ปิดเสียง";b.setAttribute("aria-pressed",v.muted?"false":"true");if(!v.muted){v.currentTime=0;v.play();}});v.addEventListener("volumechange",function(){b.textContent=v.muted?"เปิดเสียง":"ปิดเสียง";b.setAttribute("aria-pressed",v.muted?"false":"true");});})();</script>
           </div>
-          <p class="note">วิดีโอแนะนำ 37 วินาที จากข้อมูลตัวอย่าง · เปิดเสียงได้ที่แถบควบคุม</p>
+          <p class="note">วิดีโอแนะนำ 38 วินาที มีดนตรีประกอบ (เริ่มแบบปิดเสียง) จากข้อมูลตัวอย่าง</p>
         </div>
       </div>
     </section>`;

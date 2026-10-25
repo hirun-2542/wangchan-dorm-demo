@@ -10,7 +10,7 @@
 |---|---|
 | **ดูหน้าแนะนำโปรเจกต์** (`/welcome`) | https://wangchan-demo.nodhk2545.workers.dev/welcome |
 | **ลองใช้ระบบจริง** ไม่ต้องสมัคร ไม่ต้องล็อกอิน | https://wangchan-demo.nodhk2545.workers.dev |
-| **วิดีโอแนะนำ 37 วินาที** | [public/welcome-media/promo.mp4](public/welcome-media/promo.mp4) |
+| **วิดีโอแนะนำ 38 วินาที** (มีดนตรีประกอบ) | [public/welcome-media/promo.mp4](public/welcome-media/promo.mp4) |
 
 <a href="public/welcome-media/promo.mp4"><img src="public/welcome-media/hero-bill-create.webp" width="820" alt="วิดีโอแนะนำระบบ: กรอกเลขมิเตอร์แล้วระบบคิดยอดให้ทั้งหอ (คลิกเพื่อเล่น)"></a>
 
@@ -65,3 +65,5 @@ Worker เดียวเสิร์ฟทั้ง API และหน้า�
 
 สัญญาอนุญาตแยกตามไฟล์ — หน้า welcome, ทางเข้าเดโม และสื่อใน `public/welcome-media/` เป็น MIT
 ส่วนที่เหลือ (ตรรกะของระบบหอพักและหน้าจอเจ้าของหอ) สงวนลิขสิทธิ์ ดู [LICENSE](LICENSE)
+
+ดนตรีประกอบในวิดีโอ: "Cat Walk" โดย Arulo จาก [Mixkit](https://mixkit.co/free-stock-music/) ใช้ภายใต้ Mixkit Stock Music Free License (เสียงประกอบอื่น ๆ ก็มาจาก Mixkit) — ส่วนนี้ไม่อยู่ใต้ MIT ของไฟล์วิดีโอ
