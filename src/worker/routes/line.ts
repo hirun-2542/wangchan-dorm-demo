@@ -916,16 +916,39 @@ lineAdmin.get("/messages", async (c) => {
 
   try {
     const origin = new URL(c.req.url).origin;
-    const dormName = (await readSetting(c.env, family, "dorm_name")) ?? defaultDormName;
-    const ownerName = (await readSetting(c.env, family, "owner_name")) ?? "";
-    const ownerPhone = (await readSetting(c.env, family, "owner_phone")) ?? "";
-    const ownerLineId = (await readSetting(c.env, family, "owner_line_id")) ?? "";
-    const promptpayId = (await readSetting(c.env, family, "promptpay_id")) ?? "";
-    const promptpayName = (await readSetting(c.env, family, "promptpay_name")) ?? "";
-    const bankName = bankThaiName((await readSetting(c.env, family, "bank_name")) ?? "");
-    const bankAccountNumber = (await readSetting(c.env, family, "bank_account_number")) ?? "";
-    const bankAccountName = (await readSetting(c.env, family, "bank_account_name")) ?? "";
-    const sample = await loadSampleBill(c.env, family);
+    // เดิมอ่านทีละค่า (D1 ไป-กลับ 10 รอบต่อกัน) — ทุกค่าไม่พึ่งกัน ยิงพร้อมกันได้
+    const [
+      dormNameRaw,
+      ownerNameRaw,
+      ownerPhoneRaw,
+      ownerLineIdRaw,
+      promptpayIdRaw,
+      promptpayNameRaw,
+      bankNameRaw,
+      bankAccountNumberRaw,
+      bankAccountNameRaw,
+      sample,
+    ] = await Promise.all([
+      readSetting(c.env, family, "dorm_name"),
+      readSetting(c.env, family, "owner_name"),
+      readSetting(c.env, family, "owner_phone"),
+      readSetting(c.env, family, "owner_line_id"),
+      readSetting(c.env, family, "promptpay_id"),
+      readSetting(c.env, family, "promptpay_name"),
+      readSetting(c.env, family, "bank_name"),
+      readSetting(c.env, family, "bank_account_number"),
+      readSetting(c.env, family, "bank_account_name"),
+      loadSampleBill(c.env, family),
+    ]);
+    const dormName = dormNameRaw ?? defaultDormName;
+    const ownerName = ownerNameRaw ?? "";
+    const ownerPhone = ownerPhoneRaw ?? "";
+    const ownerLineId = ownerLineIdRaw ?? "";
+    const promptpayId = promptpayIdRaw ?? "";
+    const promptpayName = promptpayNameRaw ?? "";
+    const bankName = bankThaiName(bankNameRaw ?? "");
+    const bankAccountNumber = bankAccountNumberRaw ?? "";
+    const bankAccountName = bankAccountNameRaw ?? "";
     const messages: LineMessageKind[] = [];
 
     if (sample !== null) {

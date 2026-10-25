@@ -125,10 +125,13 @@ rooms.get("/", async (c) => {
   const family = familyId(c);
 
   try {
-    const result = await c.env.DB.prepare(`SELECT ${roomColumns} ${roomFrom} WHERE r.family_id = ? ORDER BY ${roomNumberOrder("r.room_number")}`)
-      .bind(family)
-      .all<RoomRow>();
-    const resolved = await resolveAllRoomCharges(c.env, family);
+    // สองก้อนนี้ไม่พึ่งกัน — ยิงพร้อมกันเพื่อไม่ต้องรอ D1 ไป-กลับต่อกันอีกรอบ
+    const [result, resolved] = await Promise.all([
+      c.env.DB.prepare(`SELECT ${roomColumns} ${roomFrom} WHERE r.family_id = ? ORDER BY ${roomNumberOrder("r.room_number")}`)
+        .bind(family)
+        .all<RoomRow>(),
+      resolveAllRoomCharges(c.env, family),
+    ]);
     return c.json({ ok: true, rooms: result.results.map((row) => toRoom(row, resolved.get(row.id) ?? { charges: [], excludedDormChargeIds: [], ownCharges: [] })) }, 200);
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);

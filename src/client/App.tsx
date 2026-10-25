@@ -1,7 +1,7 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AccountButton } from "./account";
 import { useAuth } from "./auth";
-import { announceBillsChanged, announceReviewQueueChanged, announceTenantsChanged, clearNotifications, fetchNotifications, fetchRooms, fetchSlips, fetchTenants, markNotificationsRead, reviewQueueChangedEvent, type Room, type Tenant } from "./api";
+import { announceBillsChanged, announceReviewQueueChanged, announceTenantsChanged, clearNotifications, fetchBills, fetchDormCharges, fetchFamily, fetchLineMessages, fetchMeterSheet, fetchNotifications, fetchRooms, fetchSettings, fetchSlips, fetchTenants, markNotificationsRead, reviewQueueChangedEvent, type Room, type Tenant } from "./api";
 import { ErrorBoundary } from "./error-boundary";
 import { NotificationButton } from "./notification-button";
 import {
@@ -12,6 +12,7 @@ import {
   unreadCount,
   type AppNotification,
 } from "./notifications";
+import { periodAt } from "./period";
 import { SearchProvider, useSearch } from "./search";
 import { startRealtime } from "./realtime";
 import { Card, Monogram, Skeleton, Toast, type PageProps } from "./ui";
@@ -23,14 +24,38 @@ import { Card, Monogram, Skeleton, Toast, type PageProps } from "./ui";
  * เปลี่ยนเป็น code-split ตาม route ทำให้ครั้งแรกโหลดเฉพาะหน้าที่เปิดจริง
  * ส่วนหน้าอื่นค่อยโหลดตอนกดเมนูไปหน้านั้น (แล้วเบราว์เซอร์ cache ไว้)
  */
-const DashboardPage = lazy(() => import("./pages/dashboard").then((m) => ({ default: m.DashboardPage })));
-const RoomsPage = lazy(() => import("./pages/rooms").then((m) => ({ default: m.RoomsPage })));
-const TenantsPage = lazy(() => import("./pages/tenants").then((m) => ({ default: m.TenantsPage })));
-const BillsPage = lazy(() => import("./pages/bills").then((m) => ({ default: m.BillsPage })));
-const ReviewPage = lazy(() => import("./pages/review").then((m) => ({ default: m.ReviewPage })));
-const LinePage = lazy(() => import("./pages/line").then((m) => ({ default: m.LinePage })));
-const FamilyPage = lazy(() => import("./pages/family").then((m) => ({ default: m.FamilyPage })));
-const SettingsPage = lazy(() => import("./pages/settings").then((m) => ({ default: m.SettingsPage })));
+type PageComponent = (props: PageProps) => ReactNode;
+
+/** หน้าที่โหลดโค้ดเสร็จแล้ว — ดู PageSlot ว่าทำไมต้องจำไว้นอก React.lazy */
+const loadedPages = new Map<string, PageComponent>();
+
+function pageLoader(id: string, load: () => Promise<PageComponent>): () => Promise<{ default: PageComponent }> {
+  return () =>
+    load().then((component) => {
+      loadedPages.set(id, component);
+      return { default: component };
+    });
+}
+
+const pageLoaders = {
+  dashboard: pageLoader("dashboard", () => import("./pages/dashboard").then((m) => m.DashboardPage)),
+  rooms: pageLoader("rooms", () => import("./pages/rooms").then((m) => m.RoomsPage)),
+  tenants: pageLoader("tenants", () => import("./pages/tenants").then((m) => m.TenantsPage)),
+  bills: pageLoader("bills", () => import("./pages/bills").then((m) => m.BillsPage)),
+  review: pageLoader("review", () => import("./pages/review").then((m) => m.ReviewPage)),
+  line: pageLoader("line", () => import("./pages/line").then((m) => m.LinePage)),
+  family: pageLoader("family", () => import("./pages/family").then((m) => m.FamilyPage)),
+  settings: pageLoader("settings", () => import("./pages/settings").then((m) => m.SettingsPage)),
+};
+
+const DashboardPage = lazy(pageLoaders.dashboard);
+const RoomsPage = lazy(pageLoaders.rooms);
+const TenantsPage = lazy(pageLoaders.tenants);
+const BillsPage = lazy(pageLoaders.bills);
+const ReviewPage = lazy(pageLoaders.review);
+const LinePage = lazy(pageLoaders.line);
+const FamilyPage = lazy(pageLoaders.family);
+const SettingsPage = lazy(pageLoaders.settings);
 
 const routeList = [
   { id: "dashboard", label: "แดชบอร์ด", icon: "space_dashboard" },
@@ -45,7 +70,7 @@ const routeList = [
 
 type RouteId = (typeof routeList)[number]["id"];
 
-const pages: Record<RouteId, (props: PageProps) => ReactNode> = {
+const pages: Record<RouteId, PageComponent> = {
   dashboard: DashboardPage,
   rooms: RoomsPage,
   tenants: TenantsPage,
@@ -320,6 +345,50 @@ function Shell() {
   }, [loadJumpIndex]);
 
   /**
+   * เข้าสู่ระบบแล้วและหน้าแรกวาดเสร็จ — โหลดโค้ดของหน้าอื่นกับตั้งค่าที่หลายหน้าใช้ไว้ล่วงหน้าตอนว่าง
+   * เพื่อให้ "ช้า" เกิดแค่ตอนเปิดแอปครั้งแรก การกดเข้าหน้าอื่นครั้งแรกไม่ต้องรอโหลดโค้ดอีก
+   * ข้ามเมื่อผู้ใช้เปิดโหมดประหยัดข้อมูล (ราว 90KB บีบอัดแล้วต่อรอบเปิดแอป)
+   */
+  useEffect(() => {
+    const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+
+    if (connection?.saveData === true) {
+      return;
+    }
+
+    const warm = () => {
+      for (const load of Object.values(pageLoaders)) {
+        void load().catch(() => undefined);
+      }
+
+      // ข้อมูลที่หน้าอื่นขอตอนเข้าครั้งแรก (ตรงกับ URL ที่หน้านั้นยิงจริง จึงเข้าแคชแล้วหน้าแสดงผลทันที)
+      // เฉพาะที่อ่าน D1 อย่างเดียว — ไม่เรียก LINE/PEA ภายนอกล่วงหน้า
+      const period = periodAt(0);
+
+      for (const prefetch of [
+        fetchSettings(),
+        fetchDormCharges(),
+        fetchFamily(),
+        fetchLineMessages(),
+        fetchBills(period),
+        fetchMeterSheet(period),
+      ]) {
+        void prefetch.catch(() => undefined);
+      }
+    };
+    const hasIdle = typeof window.requestIdleCallback === "function";
+    const handle = hasIdle ? window.requestIdleCallback(warm, { timeout: 4000 }) : window.setTimeout(warm, 1500);
+
+    return () => {
+      if (hasIdle) {
+        window.cancelIdleCallback(handle);
+      } else {
+        window.clearTimeout(handle);
+      }
+    };
+  }, []);
+
+  /**
    * เปลี่ยน view ด้วย hash ไม่ได้ reload หน้า — ต้องย้ายโฟกัสไปเนื้อหาใหม่เอง
    * ไม่งั้นโปรแกรมอ่านหน้าจอไม่รู้ว่าเนื้อหาเปลี่ยน และ Tab ต่อไปจะเริ่มจากที่เดิม
    * (ข้ามการเลื่อนจอ เพราะ effect เดียวกันของ useHashRoute เลื่อนขึ้นบนสุดให้แล้ว)
@@ -448,7 +517,12 @@ function Shell() {
     setMoreOpen(true);
   };
 
-  const Page = pages[parsed.route];
+  // หน้าที่โหลดไว้แล้ว (เช่นโหลดล่วงหน้าตอนว่าง) วาดตรง ๆ ไม่ผ่าน React.lazy
+  // เพราะ lazy ที่ยังไม่เคยวาดต้องหยุดรอหนึ่งรอบ แล้ว React จะค้าง fallback ไว้อย่างน้อย ~300ms
+  // ก่อนเผยเนื้อหา แม้โค้ดอยู่ในเครื่องแล้ว — เป็นสาเหตุที่การเข้าหน้าอื่นครั้งแรกหลังโหลดไว้แล้วยังช้า
+  // เลือกครั้งเดียวต่อ route (useMemo) — ถ้าสลับชนิดคอมโพเนนต์กลางทางเมื่อโหลดล่วงหน้าเสร็จ
+  // หน้าที่เปิดอยู่จะถูกสร้างใหม่และฟอร์มที่พิมพ์ค้างไว้หาย
+  const Page = useMemo(() => loadedPages.get(parsed.route) ?? pages[parsed.route], [parsed.route]);
   const moreActive = moreRoutes.includes(parsed.route);
 
   const needle = query.trim().toLowerCase();

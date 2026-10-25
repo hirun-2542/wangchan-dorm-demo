@@ -303,7 +303,85 @@ export function onUnauthorized(handler: () => void): () => void {
   };
 }
 
+/**
+ * แคชคำตอบ GET ในหน่วยความจำของแท็บ — กลับมาหน้าเดิมต้องไม่รอเครือข่ายอีก
+ *
+ * วัดบน production (Worker อยู่กรุงเทพ, D1 อยู่ APAC) แล้วแต่ละ API ใช้ 100–530ms
+ * เพราะทุกคำขอต้องผ่านการตรวจเซสชันที่ D1 บวกคำสั่งของหน้านั้น การโหลดซ้ำทุกครั้งที่สลับหน้า
+ * จึงรู้สึกช้าทุกหน้า ทั้งที่ข้อมูลยังไม่เปลี่ยน
+ *
+ * ความถูกต้องกันด้วยการล้างแคชทั้งก้อน (ไม่เลือกเป็นรายคีย์ เพราะ API หนึ่งเส้นกระทบหลายหน้า):
+ * ทุกคำขอที่เปลี่ยนข้อมูล, ทุก announce* (event จาก WebSocket), 401 และเมื่อกลับมาที่แท็บหลังซ่อนไว้นาน
+ * สิ่งที่แคชไม่เห็นคือแก้จากอีกเครื่องโดยไม่มี event — เก่าได้ไม่เกิน `cacheTtlMs`
+ */
+const cacheTtlMs = 10 * 60 * 1000;
+/** ซ่อนแท็บนานกว่านี้แล้วกลับมา = ข้อมูลอาจเปลี่ยนจากอีกเครื่อง ล้างแคชก่อนใช้ต่อ */
+const hiddenClearMs = 30 * 1000;
+/**
+ * ต้องสดทุกครั้งเสมอ:
+ * - คิวที่ LINE เป็นฝ่ายเติม (สลิปรอตรวจ, คนที่ยังไม่ผูกห้อง) — webhook เขียนลงฐานข้อมูลโดยไม่มี event
+ *   ส่งมาหน้าเว็บ (event มีแค่ "บิลถูกปิด"/"ผู้เช่าเชื่อมแล้ว") แคชคิวว่างไว้จะซ่อนของที่เพิ่งเข้ามา
+ * - รายการแจ้งเตือนมี event ของตัวเอง ส่วน export เป็นก้อนใหญ่ที่ไม่ใช่การเปิดหน้า
+ */
+const uncachedGetPaths = ["/api/notifications", "/api/bills/export", "/api/slips", "/api/line/pending"];
+/**
+ * แดชบอร์ดแสดงสถานะสลิปรอตรวจ/การผูก LINE ของแต่ละห้อง ซึ่งเปลี่ยนจาก webhook ได้โดยไม่มี event
+ * เหมือนคิวข้างบน แต่เป็นหน้าแรกที่เปิดบ่อยสุด จึงแคชแค่สั้น ๆ พอให้สลับหน้าไปมาไม่ต้องรอ
+ */
+const shortLivedGetPaths: Record<string, number> = { "/api/stats/dashboard": 30 * 1000 };
+
+const getCache = new Map<string, { at: number; body: unknown }>();
+const inflightGets = new Map<string, Promise<unknown>>();
+/** คำขอที่เริ่มก่อนล้างแคชแล้วตอบหลังล้าง ต้องไม่ถูกเก็บ — ไม่งั้นข้อมูลก่อนแก้กลับเข้าแคช */
+let cacheGeneration = 0;
+
+export function clearApiCache(): void {
+  cacheGeneration += 1;
+  getCache.clear();
+  inflightGets.clear();
+}
+
+// api.ts ถูก import จากชุดทดสอบฝั่ง worker ด้วย (ไม่มี lib.dom) จึงเข้าถึง document ผ่าน globalThis
+const pageDocument = (
+  globalThis as unknown as {
+    document?: { visibilityState: string; addEventListener: (type: string, listener: () => void) => void };
+  }
+).document;
+
+if (pageDocument !== undefined) {
+  let hiddenAt: number | null = null;
+
+  pageDocument.addEventListener("visibilitychange", () => {
+    if (pageDocument.visibilityState === "hidden") {
+      hiddenAt = Date.now();
+      return;
+    }
+
+    if (hiddenAt !== null && Date.now() - hiddenAt > hiddenClearMs) {
+      clearApiCache();
+    }
+
+    hiddenAt = null;
+  });
+}
+
 async function request<T>(path: string, init: RequestInit): Promise<T> {
+  // คำขอที่เปลี่ยนข้อมูลล้างแคชทั้งก่อนส่งและหลังตอบ: ก่อนส่งกัน GET ที่เริ่มระหว่างนั้นเก็บของเก่า
+  // หลังตอบเพราะ GET ที่ออกไประหว่างรอ POST อาจอ่านข้อมูลก่อนที่ POST จะเขียนเสร็จ
+  if (init.method !== undefined && init.method !== "GET") {
+    clearApiCache();
+
+    try {
+      return await send<T>(path, init);
+    } finally {
+      clearApiCache();
+    }
+  }
+
+  return send<T>(path, init);
+}
+
+async function send<T>(path: string, init: RequestInit): Promise<T> {
   let response: Response;
 
   // ไฟล์นี้ถูก import จากทั้งฝั่ง client (lib.dom RequestInit มี credentials)
@@ -342,6 +420,7 @@ async function request<T>(path: string, init: RequestInit): Promise<T> {
       response.status === 401 &&
       !selfHandledAuthPaths.some((known) => path.startsWith(known))
     ) {
+      clearApiCache();
       unauthorizedHandler?.();
     }
 
@@ -360,7 +439,44 @@ async function request<T>(path: string, init: RequestInit): Promise<T> {
 }
 
 export function apiGet<T>(path: string): Promise<T> {
-  return request<T>(path, { method: "GET" });
+  if (uncachedGetPaths.some((known) => path.startsWith(known))) {
+    return request<T>(path, { method: "GET" });
+  }
+
+  const hit = getCache.get(path);
+
+  const ttlMs =
+    Object.entries(shortLivedGetPaths).find(([known]) => path.startsWith(known))?.[1] ?? cacheTtlMs;
+
+  if (hit !== undefined && Date.now() - hit.at < ttlMs) {
+    // สำเนาทุกครั้ง — หน้าที่เรียงหรือแก้ array ที่ได้มาตรง ๆ ต้องไม่ทำให้แคชเพี้ยน
+    return Promise.resolve(structuredClone(hit.body) as T);
+  }
+
+  let pending = inflightGets.get(path);
+
+  if (pending === undefined) {
+    const generation = cacheGeneration;
+    const started: Promise<unknown> = request<unknown>(path, { method: "GET" })
+      .then((body) => {
+        if (generation === cacheGeneration) {
+          getCache.set(path, { at: Date.now(), body });
+        }
+
+        return body;
+      })
+      .finally(() => {
+        if (inflightGets.get(path) === started) {
+          inflightGets.delete(path);
+        }
+      });
+
+    inflightGets.set(path, started);
+    pending = started;
+  }
+
+  // คำขอเดียวกันที่ยิงพร้อมกัน (เช่น ดัชนีค้นหากับหน้าห้องพักขอ /api/rooms พร้อมกัน) ใช้คำตอบเดียว
+  return pending.then((body) => structuredClone(body) as T);
 }
 
 export function apiPost<T>(path: string, body: unknown): Promise<T> {
@@ -903,6 +1019,8 @@ export async function resolveSlip(
 export const reviewQueueChangedEvent = "wangchan:review-queue-changed";
 
 export function announceReviewQueueChanged(): void {
+  // ผู้ฟังโหลดข้อมูลใหม่ทันที — ต้องล้างก่อน ไม่งั้นได้แคชเก่ากลับไป
+  clearApiCache();
   const target = globalThis as unknown as EventTarget;
   target.dispatchEvent(new Event(reviewQueueChangedEvent));
 }
@@ -911,6 +1029,8 @@ export const billsChangedEvent = "wangchan:bills-changed";
 
 /** บอกหน้ารายการบิลว่าชุดบิลเปลี่ยนแล้ว (สร้าง/ส่ง/แก้/ลบ) ให้โหลดใหม่ */
 export function announceBillsChanged(): void {
+  // ผู้ฟังโหลดข้อมูลใหม่ทันที — ต้องล้างก่อน ไม่งั้นได้แคชเก่ากลับไป
+  clearApiCache();
   const target = globalThis as unknown as EventTarget;
   target.dispatchEvent(new Event(billsChangedEvent));
 }
@@ -925,6 +1045,8 @@ export const tenantsChangedEvent = "wangchan:tenants-changed";
  * จำนวนผู้เช่าจากข้อมูลชุดเดียวกัน
  */
 export function announceTenantsChanged(): void {
+  // ผู้ฟังโหลดข้อมูลใหม่ทันที — ต้องล้างก่อน ไม่งั้นได้แคชเก่ากลับไป
+  clearApiCache();
   const target = globalThis as unknown as EventTarget;
   target.dispatchEvent(new Event(tenantsChangedEvent));
 }

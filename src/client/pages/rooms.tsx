@@ -48,6 +48,7 @@ import {
 } from "./bills-shared";
 import { periodAt, periodLabel, recentPeriods } from "../period";
 import { ChoiceRow, numericValue } from "./dorm-shared";
+import { RoomPeaConnection } from "./rooms-pea";
 
 type StatusFilter = "all" | "occupied" | "vacant";
 type RoomView = "table" | "cards";
@@ -742,6 +743,28 @@ function RoomDrawer({
             <p className="text-xs text-danger">{fieldError("electricMode")}</p>
           )}
         </fieldset>
+
+        {form.electricChoice === "flat" && (
+          <fieldset className="grid gap-2">
+            <legend className="field-label">การเชื่อมต่อ PEA</legend>
+            <p className="text-xs text-fog">
+              ใช้ดึงยอดบิลค่าไฟล่าสุดมาใส่ตอนสร้างบิลหรือ Statement ห้องว่าง
+              บันทึกทันทีเมื่อกดบันทึกการเชื่อมต่อ ไม่ต้องรอปุ่มบันทึกห้อง
+            </p>
+            {base === null ? (
+              <p className="text-xs text-fog">
+                บันทึกห้องก่อน แล้วกลับมาตั้งการเชื่อมต่อ PEA ได้ที่นี่
+              </p>
+            ) : base.electricMode !== "flat" ? (
+              <p className="text-xs text-fog">
+                ห้องนี้ยังเป็นโหมดมิเตอร์ บันทึกห้องเป็นเหมาจ่ายก่อน
+                แล้วกลับมาตั้งการเชื่อมต่อ PEA ได้ที่นี่
+              </p>
+            ) : (
+              <RoomPeaConnection roomId={base.id} />
+            )}
+          </fieldset>
+        )}
 
         <fieldset className="grid gap-2">
           <legend className="field-label">ค่าใช้จ่ายเพิ่มเติม</legend>

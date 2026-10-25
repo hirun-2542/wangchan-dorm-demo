@@ -271,6 +271,9 @@ function accountNumberError(value: string): string | null {
   return null;
 }
 
+/** userId → ชื่อที่ LINE ตอบ (ต่อ isolate) — ดู ownerLineDisplayName */
+const ownerNameCache = new Map<string, { name: string; at: number }>();
+
 /**
  * ชื่อที่แสดงของบัญชี LINE ที่ผูกเป็นเจ้าของอยู่ — null เมื่อยังไม่ผูก
  *
@@ -300,9 +303,23 @@ async function ownerLineDisplayName(env: Env, family: string): Promise<string | 
     return pending.display_name ?? "";
   }
 
+  // ชื่อในบัญชี LINE แทบไม่เปลี่ยน แต่เดิมยิง LINE profile API ทุกครั้งที่เปิดหน้าตั้งค่า (100–300ms)
+  // จำไว้ใน isolate ตามเวลาเดียวกับชื่อบอท — จำเฉพาะที่ดึงได้ ดึงไม่ได้ก็ลองใหม่รอบหน้า
+  const known = ownerNameCache.get(ownerId);
+
+  if (known !== undefined && Date.now() - known.at < botInfoTtlMs) {
+    return known.name;
+  }
+
   const profile = await fetchProfile(env, ownerId);
 
-  return profile === null ? "" : profile.displayName;
+  if (profile === null) {
+    return "";
+  }
+
+  ownerNameCache.set(ownerId, { name: profile.displayName, at: Date.now() });
+
+  return profile.displayName;
 }
 
 /**
@@ -479,11 +496,15 @@ function parseRoomIds(raw: string | undefined): string[] {
 }
 
 async function loadSettings(env: Env, family: string): Promise<SettingsPayload> {
-  const result = await env.DB.prepare(
-    "SELECT key, value FROM settings WHERE family_id = ?",
-  )
-    .bind(family)
-    .all<{ key: string; value: string }>();
+  // สามอย่างนี้ไม่พึ่งกัน — เดิมรอทีละตัวต่อกัน (D1 ไป-กลับ 5–6 รอบ รวม ~500ms บน production)
+  // ยิงพร้อมกันเหลือเวลาของตัวที่ช้าสุดตัวเดียว
+  const [result, lineDisplayName, lineBot] = await Promise.all([
+    env.DB.prepare("SELECT key, value FROM settings WHERE family_id = ?")
+      .bind(family)
+      .all<{ key: string; value: string }>(),
+    ownerLineDisplayName(env, family),
+    loadBotInfo(env),
+  ]);
   const stored = new Map(result.results.map((row) => [row.key, row.value]));
   const valueOf = (key: SettingsKey): string =>
     stored.get(key) ?? defaultSettings[key];
@@ -538,12 +559,12 @@ async function loadSettings(env: Env, family: string): Promise<SettingsPayload> 
      * แสดงชื่อด้วย ไม่งั้น "เชื่อมแล้ว" จะไม่มีทางรู้ว่าใคร (ดู ownerLineUserIdHint
      * ด้วย — userId ไม่ใช่ความลับที่ใช้สวมสิทธิ์ แต่ก็ไม่ควรแสดงเต็ม)
      */
-    ownerLineDisplayName: await ownerLineDisplayName(env, family),
+    ownerLineDisplayName: lineDisplayName,
     /**
      * OA ของหอ — ให้หน้าตั้งค่าบอกได้ว่า "เพิ่มเพื่อน OA ตัวไหน" ก่อนพิมพ์รหัส
      * (null เมื่อยังไม่ตั้ง token หรือเรียก LINE ไม่ได้)
      */
-    lineBot: await loadBotInfo(env),
+    lineBot,
     /**
      * "ตั้งค่าแล้วหรือยัง" นับทั้งค่าที่เจ้าของกรอกและ env — ใช้สถานะชุดเดียวกับ
      * ที่หน้าจอแสดงรายฟิลด์ จะได้ไม่มีที่ไหนตอบไม่ตรงกัน
