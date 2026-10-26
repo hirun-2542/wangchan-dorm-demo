@@ -12,11 +12,8 @@
 | **ลองใช้ระบบจริง** ไม่ต้องสมัคร ไม่ต้องล็อกอิน | https://wangchan-demo.nodhk2545.workers.dev |
 | **วิดีโอแนะนำ 38 วินาที** (มีดนตรีประกอบ) | [public/welcome-media/promo.mp4](public/welcome-media/promo.mp4) |
 
-<a href="public/welcome-media/promo.mp4"><img src="public/welcome-media/hero-bill-create.webp" width="820" alt="วิดีโอแนะนำระบบ: กรอกเลขมิเตอร์แล้วระบบคิดยอดให้ทั้งหอ (คลิกเพื่อเล่น)"></a>
+<img src="public/welcome-media/bill-dashboard.webp" width="820" alt="แดชบอร์ด: อัตราการเข้าพัก กราฟรายรับ 6 เดือน และผังสถานะทุกห้อง">
 
-<img src="public/welcome-media/bill-dashboard.webp" width="520" alt="แดชบอร์ด: อัตราการเข้าพัก กราฟรายรับ 6 เดือน และผังสถานะทุกห้อง">
-<img src="public/welcome-media/payment-status.webp" width="260" alt="คิวรอตรวจสลิป แสดงผลตรวจและปุ่มตัดสิน">
-<img src="public/welcome-media/bill-line-qr.webp" width="200" alt="ใบแจ้งหนี้ใน LINE พร้อมปุ่มเปิด PDF และ QR พร้อมเพย์">
 
 ## ทำอะไรได้บ้าง
 
